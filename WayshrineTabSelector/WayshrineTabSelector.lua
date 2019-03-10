@@ -54,7 +54,7 @@ local panelData = {
     name = "Wayshrine Tab Selector",
     displayName = "Wayshrine Tab Selector",
     author = "Kulturnilpferd",
-    version = "1.0",
+    version = "1.1",
     slashCommand = "/wayshrinetabselector",	
     registerForRefresh = true,	
     registerForDefaults = true,
@@ -97,7 +97,6 @@ local optionsTable = {
 		end,
 		setFunc = function(value) 
 			WayshrineTabSelector.savedVariables.Automode = value
-			d(WayshrineTabSelector.savedVariables.Automode) 
 		end,
 		width = "full",	--or "half" (optional)
 		warning = "Override default tab when enabled but more comfortable",	--(optional)
