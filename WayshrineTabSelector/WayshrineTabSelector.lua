@@ -1,7 +1,8 @@
 WayshrineTabSelector = {}
 WayshrineTabSelector.variableVersion = 2 
 WayshrineTabSelector.Default = {
-	DropdownMenuIndex = "Quests"
+	DropdownMenuIndex = SI_MAP_INFO_MODE_LOCATIONS,
+	Automode = false
 }
 
 local _events = {}
@@ -32,6 +33,22 @@ local function init(func, ...)
     end)
 end
 
+local choicesTabs = {
+    GetString(SI_MAP_INFO_MODE_QUESTS),
+    GetString(SI_MAP_INFO_MODE_KEY),
+    GetString(SI_MAP_INFO_MODE_FILTERS),
+    GetString(SI_MAP_INFO_MODE_LOCATIONS),
+    GetString(SI_MAP_INFO_MODE_HOUSES)
+}
+
+local choicesTabsValues = {
+    SI_MAP_INFO_MODE_QUESTS,
+    SI_MAP_INFO_MODE_KEY,
+    SI_MAP_INFO_MODE_FILTERS,
+    SI_MAP_INFO_MODE_LOCATIONS,
+    SI_MAP_INFO_MODE_HOUSES,
+}
+
 local panelData = {
     type = "panel",
     name = "Wayshrine Tab Selector",
@@ -58,42 +75,84 @@ local optionsTable = {
     [3] = {
         type = "dropdown",
         name = "Default Wayshrine Tab",
-        choices = {"Quests", "Key", "Filters", "Locations", "Houses"},
+        choices = choicesTabs,
+		choicesValues   = choicesTabsValues,
         getFunc = function() 
 			return WayshrineTabSelector.savedVariables.DropdownMenuIndex end,
         setFunc = function(var)
 			WayshrineTabSelector.savedVariables.DropdownMenuIndex = var	
 			end,
-        width = "half",
+        width = "full",
     },
+	[4] = {
+		type = "checkbox",
+		name = "Auto Mode",
+		tooltip = "Will open the last used tab when visit a wayshrine",
+		getFunc = function()
+			if WayshrineTabSelector.savedVariables.Automode then
+				return true
+			else
+				return false
+			end
+		end,
+		setFunc = function(value) 
+			WayshrineTabSelector.savedVariables.Automode = value
+			d(WayshrineTabSelector.savedVariables.Automode) 
+		end,
+		width = "full",	--or "half" (optional)
+		warning = "Override default tab when enabled but more comfortable",	--(optional)
+	},
 }
 
 local LAM = LibStub("LibAddonMenu-2.0")
 
 init(function()
+	-- Quest
+	ZO_PreHookHandler(ZO_WorldMapInfoMenuBarButton1, "OnMouseUp", function(control, button, upInside)
+		if WayshrineTabSelector.savedVariables.Automode and button == MOUSE_BUTTON_INDEX_LEFT then
+			WayshrineTabSelector.savedVariables.DropdownMenuIndex = SI_MAP_INFO_MODE_QUESTS
+		end
+		return false
+	end)
+	
+	-- Key
+	ZO_PreHookHandler(ZO_WorldMapInfoMenuBarButton2, "OnMouseUp", function(control, button, upInside)
+		if WayshrineTabSelector.savedVariables.Automode and button == MOUSE_BUTTON_INDEX_LEFT then
+			WayshrineTabSelector.savedVariables.DropdownMenuIndex = SI_MAP_INFO_MODE_KEY
+		end
+		return false
+	end)
+	
+	-- Filters
+	ZO_PreHookHandler(ZO_WorldMapInfoMenuBarButton3, "OnMouseUp", function(control, button, upInside)
+		if WayshrineTabSelector.savedVariables.Automode and button == MOUSE_BUTTON_INDEX_LEFT then
+			WayshrineTabSelector.savedVariables.DropdownMenuIndex = SI_MAP_INFO_MODE_FILTERS
+		end
+		return false
+	end)
+	
+	-- Locations
+	ZO_PreHookHandler(ZO_WorldMapInfoMenuBarButton4, "OnMouseUp", function(control, button, upInside)
+		if WayshrineTabSelector.savedVariables.Automode and button == MOUSE_BUTTON_INDEX_LEFT then
+			WayshrineTabSelector.savedVariables.DropdownMenuIndex = SI_MAP_INFO_MODE_LOCATIONS
+		end
+		return false
+	end)
+	
+	-- Houses
+	ZO_PreHookHandler(ZO_WorldMapInfoMenuBarButton5, "OnMouseUp", function(control, button, upInside)
+		if WayshrineTabSelector.savedVariables.Automode and button == MOUSE_BUTTON_INDEX_LEFT then
+			WayshrineTabSelector.savedVariables.DropdownMenuIndex = SI_MAP_INFO_MODE_HOUSES
+		end
+		return false
+	end)
+	
 	local function StartFastTravelInteract()
-		if WayshrineTabSelector.savedVariables.DropdownMenuIndex == "Quests" then
-			WORLD_MAP_INFO:SelectTab(SI_MAP_INFO_MODE_QUESTS)
-		elseif WayshrineTabSelector.savedVariables.DropdownMenuIndex == "Key" then
-			WORLD_MAP_INFO:SelectTab(SI_MAP_INFO_MODE_KEY)
-		elseif WayshrineTabSelector.savedVariables.DropdownMenuIndex == "Filters" then
-			WORLD_MAP_INFO:SelectTab(SI_MAP_INFO_MODE_FILTERS)
-		elseif WayshrineTabSelector.savedVariables.DropdownMenuIndex == "Locations" then
-			WORLD_MAP_INFO:SelectTab(SI_MAP_INFO_MODE_LOCATIONS)
-		elseif WayshrineTabSelector.savedVariables.DropdownMenuIndex == "Houses" then
-			WORLD_MAP_INFO:SelectTab(SI_MAP_INFO_MODE_HOUSES)
-		end		
+		if WayshrineTabSelector.savedVariables.DropdownMenuIndex then
+           WORLD_MAP_INFO:SelectTab(WayshrineTabSelector.savedVariables.DropdownMenuIndex)
+        end
 	end
-	
-	--local function EndFastTravelInteract()
-		--if SI_MAP_INFO_MODE_QUESTS:IsActive then
-		--	d("1")
-		--end
-		--if SI_MAP_INFO_MODE_KEY:IsVisible() then
-		--	d("2")
-		--end
-	--end
-	
+
 	addEvent(EVENT_START_FAST_TRAVEL_INTERACTION, function()
 		StartFastTravelInteract()
     end)
@@ -101,10 +160,6 @@ init(function()
     addEvent(EVENT_START_FAST_TRAVEL_KEEP_INTERACTION, function()
 		StartFastTravelInteract()
     end)
-	
-	--addEvent(EVENT_END_FAST_TRAVEL_INTERACTION, function()
-	--EndFastTravelInteract()
-    --end)
 	
 	WayshrineTabSelector.savedVariables = ZO_SavedVars:NewAccountWide("WayshrineTabSelectorDB", WayshrineTabSelector.variableVersion, nil, WayshrineTabSelector.Default)
 	LAM:RegisterAddonPanel("MyAddon", panelData)
