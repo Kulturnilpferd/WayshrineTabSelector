@@ -18,6 +18,8 @@ local function GetEventName(id)
     return table.concat({ "WayshrineTabSelector_", tostring(id), "_", tostring(GetUniqueEventId(id)) })
 end
 
+local otherAddons = {}
+
 local function addEvent(id, func)
     local name = GetEventName(id)
     EVENT_MANAGER:RegisterForEvent(name, id, func)
@@ -27,11 +29,25 @@ local function init(func, ...)
     local arg = { ... }
     addEvent(EVENT_ADD_ON_LOADED, function(eventCode, addOnName)
 	if (addOnName ~= "WayshrineTabSelector") then
+		if addOnName == "FasterTravel" then
+			otherAddons["FasterTravel"] = true
+		end
 	    return
 	end
 	func(unpack(arg))
     end)
 end
+
+local panelData = {
+    type = "panel",
+    name = "Wayshrine Tab Selector",
+    displayName = "Wayshrine Tab Selector",
+    author = "Kulturnilpferd",
+    version = "1.3",
+    slashCommand = "/wayshrinetabselector",	
+    registerForRefresh = true,	
+    registerForDefaults = true,
+}
 
 local choicesTabs = {
     GetString(SI_MAP_INFO_MODE_QUESTS),
@@ -39,7 +55,7 @@ local choicesTabs = {
     GetString(SI_MAP_INFO_MODE_FILTERS),
     GetString(SI_MAP_INFO_MODE_LOCATIONS),
     GetString(SI_MAP_INFO_MODE_HOUSES)
-}
+	}
 
 local choicesTabsValues = {
     SI_MAP_INFO_MODE_QUESTS,
@@ -47,17 +63,6 @@ local choicesTabsValues = {
     SI_MAP_INFO_MODE_FILTERS,
     SI_MAP_INFO_MODE_LOCATIONS,
     SI_MAP_INFO_MODE_HOUSES,
-}
-
-local panelData = {
-    type = "panel",
-    name = "Wayshrine Tab Selector",
-    displayName = "Wayshrine Tab Selector",
-    author = "Kulturnilpferd",
-    version = "1.1",
-    slashCommand = "/wayshrinetabselector",	
-    registerForRefresh = true,	
-    registerForDefaults = true,
 }
 
 local optionsTable = {
@@ -96,7 +101,7 @@ local optionsTable = {
 			end
 		end,
 		setFunc = function(value) 
-			WayshrineTabSelector.savedVariables.Automode = value
+			WayshrineTabSelector.savedVariables.Automode = value 
 		end,
 		width = "full",	--or "half" (optional)
 		warning = "Override default tab when enabled but more comfortable",	--(optional)
@@ -142,24 +147,64 @@ init(function()
 	ZO_PreHookHandler(ZO_WorldMapInfoMenuBarButton5, "OnMouseUp", function(control, button, upInside)
 		if WayshrineTabSelector.savedVariables.Automode and button == MOUSE_BUTTON_INDEX_LEFT then
 			WayshrineTabSelector.savedVariables.DropdownMenuIndex = SI_MAP_INFO_MODE_HOUSES
-		end
+		end	
 		return false
 	end)
 	
-	local function StartFastTravelInteract()
-		if WayshrineTabSelector.savedVariables.DropdownMenuIndex then
-           WORLD_MAP_INFO:SelectTab(WayshrineTabSelector.savedVariables.DropdownMenuIndex)
-        end
-	end
+	-- Support for FasterTravel
+	if otherAddons["FasterTravel"] then	
+		optionsTable[3].choices = {
+			GetString(SI_MAP_INFO_MODE_QUESTS),
+			GetString(SI_MAP_INFO_MODE_KEY),
+			GetString(SI_MAP_INFO_MODE_FILTERS),
+			GetString(SI_MAP_INFO_MODE_LOCATIONS),
+			GetString(SI_MAP_INFO_MODE_HOUSES),
+			GetString(SI_MAP_INFO_MODE_WAYSHRINES),
+			GetString(SI_MAP_INFO_MODE_PLAYERS)
+		}
+		
+		optionsTable[3].choicesValues = {
+			SI_MAP_INFO_MODE_QUESTS,
+			SI_MAP_INFO_MODE_KEY,
+			SI_MAP_INFO_MODE_FILTERS,
+			SI_MAP_INFO_MODE_LOCATIONS,
+			SI_MAP_INFO_MODE_HOUSES,
+			SI_MAP_INFO_MODE_WAYSHRINES,
+			SI_MAP_INFO_MODE_PLAYERS
+		}
+		
+		ZO_PreHookHandler(ZO_WorldMapInfoMenuBarButton6, "OnMouseUp", function(control, button, upInside)
+			if WayshrineTabSelector.savedVariables.Automode and button == MOUSE_BUTTON_INDEX_LEFT then
+				WayshrineTabSelector.savedVariables.DropdownMenuIndex = SI_MAP_INFO_MODE_WAYSHRINES
+			end
+			return false
+		end)
 
+		ZO_PreHookHandler(ZO_WorldMapInfoMenuBarButton7, "OnMouseUp", function(control, button, upInside)
+			if WayshrineTabSelector.savedVariables.Automode and button == MOUSE_BUTTON_INDEX_LEFT then
+				WayshrineTabSelector.savedVariables.DropdownMenuIndex = SI_MAP_INFO_MODE_PLAYERS
+			end
+			return false
+		end)
+	end
+	
+	local WayshrineTrigger = false
 	addEvent(EVENT_START_FAST_TRAVEL_INTERACTION, function()
-		StartFastTravelInteract()
+		WayshrineTrigger = true
     end)
 
     addEvent(EVENT_START_FAST_TRAVEL_KEEP_INTERACTION, function()
-		StartFastTravelInteract()
+		WayshrineTrigger = true
     end)
 	
+	ZO_PreHookHandler(ZO_WorldMapInfoMenuBar, "OnUpdate", function()
+		if WayshrineTabSelector.savedVariables.DropdownMenuIndex and WayshrineTrigger then
+           WORLD_MAP_INFO:SelectTab(WayshrineTabSelector.savedVariables.DropdownMenuIndex)
+		   WayshrineTrigger = false
+        end
+		return false
+	end)
+
 	WayshrineTabSelector.savedVariables = ZO_SavedVars:NewAccountWide("WayshrineTabSelectorDB", WayshrineTabSelector.variableVersion, nil, WayshrineTabSelector.Default)
 	LAM:RegisterAddonPanel("MyAddon", panelData)
 	LAM:RegisterOptionControls("MyAddon", optionsTable)
