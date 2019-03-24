@@ -103,8 +103,8 @@ local optionsTable = {
 		setFunc = function(value) 
 			WayshrineTabSelector.savedVariables.Automode = value 
 		end,
-		width = "full",	--or "half" (optional)
-		warning = "Override default tab when enabled but more comfortable",	--(optional)
+		width = "full",
+		warning = "Override default tab when enabled but more comfortable",
 	},
 }
 
