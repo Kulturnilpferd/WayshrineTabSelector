@@ -191,11 +191,11 @@ init(function()
 	local WayshrineTrigger = false
 	addEvent(EVENT_START_FAST_TRAVEL_INTERACTION, function()
 		WayshrineTrigger = true
-    end)
+    	end)
 
-    addEvent(EVENT_START_FAST_TRAVEL_KEEP_INTERACTION, function()
+    	addEvent(EVENT_START_FAST_TRAVEL_KEEP_INTERACTION, function()
 		WayshrineTrigger = true
-    end)
+    	end)
 	
 	ZO_PreHookHandler(ZO_WorldMapInfoMenuBar, "OnUpdate", function()
 		if WayshrineTabSelector.savedVariables.DropdownMenuIndex and WayshrineTrigger then
